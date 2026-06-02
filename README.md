@@ -15,7 +15,7 @@ uv run app.py
 ```python
 DEFAULT_RUN_CONFIG = {
     "survey_template": None,
-    "survey_template_pattern": "materials/input/*.xlsx",
+    "survey_template_patterns": ["materials/input/template/*.xlsx", "materials/input/*.xlsx"],
     "pl_csv": None,
     "bs_csv": None,
     "input_csv_pattern": "materials/input/*.csv",
@@ -39,19 +39,23 @@ DEFAULT_RUN_CONFIG = {
 
 ## 実データの置き場所
 
-`materials/input/` 配下に置きます。`materials/` は `.gitignore` 済みなので、個人情報、会計データ、調査票、実行結果をコミットしない運用です。
+`materials/input/` 配下に置きます。配布zipには空の `materials/input/`、`materials/input/template/`、`materials/output/` が入っています。中に置いた個人情報、会計データ、調査票、実行結果はgit追跡しない運用です。
 
 ```text
 materials/
   input/
     template/
+      .gitkeep
       法人企業統計調査_template.xlsx
+    .gitkeep
     survey.xlsx
     損益計算書_月次推移_20260528_1342.csv
     貸借対照表_月次推移_20260528_1342.csv
     支給控除一覧表_2026年01月25日支給.csv
     支給控除一覧表_2026年02月25日支給.csv
     reference.pdf
+  output/
+    .gitkeep
 ```
 
 調査票テンプレートは `materials/input/template/*.xlsx` を優先して自動検出します。Excelが開いている時にできる `~$...xlsx` の一時ファイルは無視します。PDFは `materials/input/*.pdf` を自動で拾い、本文抽出結果を `materials/output/<実行時刻>/pdf_texts.json` に出します。給与CSVがない場合は、人件費集計をスキップします。

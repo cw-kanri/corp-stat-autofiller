@@ -2,7 +2,13 @@
 .pytest_cache/
 __pycache__/
 *.py[cod]
-output/
-input/
+/output/
+/input/
 sample_output/
-materials/
+materials/input/*
+!materials/input/template/
+materials/input/template/*
+materials/output/*
+!materials/input/.gitkeep
+!materials/input/template/.gitkeep
+!materials/output/.gitkeep
