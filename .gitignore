@@ -12,3 +12,4 @@ materials/output/*
 !materials/input/.gitkeep
 !materials/input/template/.gitkeep
 !materials/output/.gitkeep
+dist/

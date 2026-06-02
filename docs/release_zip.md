@@ -38,6 +38,8 @@
 - `input/`
 - `output/`
 - `sample_output/`
+- `dist/`
+- `.gitkeep`
 - `*.pyc`
 - `*.pyo`
 
@@ -79,8 +81,10 @@ uv run app.py
 リポジトリ直下で実行します。
 
 ```powershell
-$releaseName = "corp-stat-autofiller-release"
+$version = "v1.0.0"
+$releaseName = "corp-stat-autofiller-$version"
 $staging = "dist\$releaseName"
+$zipPath = "dist\$releaseName.zip"
 
 Remove-Item -Recurse -Force "dist" -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $staging | Out-Null
@@ -94,19 +98,62 @@ Copy-Item -Recurse "config" $staging
 Copy-Item -Recurse "src" $staging
 Copy-Item -Recurse "docs" $staging
 
+# テストも同梱する場合だけ、次の行のコメントを外します。
+# Copy-Item -Recurse "tests" $staging
+
 New-Item -ItemType Directory -Force "$staging\materials\input\template" | Out-Null
 New-Item -ItemType Directory -Force "$staging\materials\output" | Out-Null
-New-Item -ItemType File -Force "$staging\materials\input\.gitkeep" | Out-Null
-New-Item -ItemType File -Force "$staging\materials\input\template\.gitkeep" | Out-Null
-New-Item -ItemType File -Force "$staging\materials\output\.gitkeep" | Out-Null
 
-Compress-Archive -Path $staging -DestinationPath "dist\$releaseName.zip" -Force
+Get-ChildItem $staging -Recurse -Force |
+    Where-Object {
+        $_.Name -in @(".gitkeep", ".pytest_cache", "__pycache__") -or
+        $_.Extension -in @(".pyc", ".pyo")
+    } |
+    Remove-Item -Recurse -Force
+
+Compress-Archive -Path $staging -DestinationPath $zipPath -Force
 ```
 
-テストも同梱する場合は、圧縮前に以下を追加します。
+`$version` を変えると、作成されるzip名も変わります。たとえば `$version = "v1.0.0"` の場合は `dist/corp-stat-autofiller-v1.0.0.zip` になります。
+
+## 作成後チェック
+
+zipの中にキャッシュや `.gitkeep` が入っていないか確認します。
 
 ```powershell
-Copy-Item -Recurse "tests" $staging
+$version = "v1.0.0"
+$releaseName = "corp-stat-autofiller-$version"
+$zipPath = "dist\$releaseName.zip"
+$checkDir = "dist\_zip_check"
+
+Remove-Item -Recurse -Force $checkDir -ErrorAction SilentlyContinue
+Expand-Archive -Path $zipPath -DestinationPath $checkDir -Force
+
+$unexpected = Get-ChildItem $checkDir -Recurse -Force |
+    Where-Object {
+        $_.Name -in @(".git", ".venv", ".pytest_cache", "__pycache__", ".gitkeep") -or
+        $_.FullName -like "*\sample_output\*" -or
+        $_.Extension -in @(".pyc", ".pyo")
+    }
+
+if ($unexpected) {
+    $unexpected | Select-Object FullName
+    throw "配布zipに入れてはいけないファイルがあります。"
+}
+
+$requiredDirs = @(
+    "$checkDir\$releaseName\materials\input",
+    "$checkDir\$releaseName\materials\input\template",
+    "$checkDir\$releaseName\materials\output"
+)
+
+foreach ($dir in $requiredDirs) {
+    if (-not (Test-Path $dir -PathType Container)) {
+        throw "必要な空フォルダがzipに入っていません: $dir"
+    }
+}
+
+Remove-Item -Recurse -Force $checkDir
 ```
 
 ## 配布zipに含まれる空フォルダ

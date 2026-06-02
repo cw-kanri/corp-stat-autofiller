@@ -65,9 +65,7 @@ materials/
 materials/
   input/
     template/
-      .gitkeep
       法人企業統計調査_template.xlsx
-    .gitkeep
     損益計算書_月次推移_20260528_1342.csv
     貸借対照表_月次推移_20260528_1342.csv
     支給控除一覧表_2026年01月25日支給.csv
@@ -75,7 +73,6 @@ materials/
     支給控除一覧表_2026年03月25日支給.csv
     参考資料.pdf
   output/
-    .gitkeep
 ```
 
 ファイル名の目安:

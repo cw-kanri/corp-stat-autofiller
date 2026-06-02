@@ -45,9 +45,7 @@ DEFAULT_RUN_CONFIG = {
 materials/
   input/
     template/
-      .gitkeep
       法人企業統計調査_template.xlsx
-    .gitkeep
     survey.xlsx
     損益計算書_月次推移_20260528_1342.csv
     貸借対照表_月次推移_20260528_1342.csv
@@ -55,7 +53,6 @@ materials/
     支給控除一覧表_2026年02月25日支給.csv
     reference.pdf
   output/
-    .gitkeep
 ```
 
 調査票テンプレートは `materials/input/template/*.xlsx` を優先して自動検出します。Excelが開いている時にできる `~$...xlsx` の一時ファイルは無視します。PDFは `materials/input/*.pdf` を自動で拾い、本文抽出結果を `materials/output/<実行時刻>/pdf_texts.json` に出します。給与CSVがない場合は、人件費集計をスキップします。
