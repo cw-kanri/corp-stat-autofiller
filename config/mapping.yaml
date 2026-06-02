@@ -3,72 +3,72 @@ default_sheet: "入力画面"
 cells:
   - item_id: "1"
     label: "現金・預金"
-    cell: "B10"
+    cell: "K21"
   - item_id: "2"
     label: "受取手形・売掛金"
-    cell: "B11"
+    cell: "K22"
   - item_id: "13"
     label: "支払手形・買掛金"
-    cell: "B22"
+    cell: "K33"
   - item_id: "18"
     label: "社債"
-    cell: "B27"
+    cell: "K38"
   - item_id: "19"
     label: "長期借入金"
-    cell: "B28"
+    cell: "K39"
   - item_id: "24"
     label: "資本金"
-    cell: "B33"
+    cell: "K44"
   - item_id: "26"
     label: "利益剰余金"
-    cell: "B35"
+    cell: "K46"
   - item_id: "45"
     label: "売上高"
-    cell: "B54"
+    cell: "AA34"
   - item_id: "46"
     label: "売上原価"
-    cell: "B55"
+    cell: "AA35"
   - item_id: "47"
     label: "販売費及び一般管理費"
-    cell: "B56"
+    cell: "AA36"
   - item_id: "49"
     label: "受取利息等"
-    cell: "B58"
+    cell: "AA38"
   - item_id: "51"
     label: "支払利息等"
-    cell: "B60"
+    cell: "AA40"
   - item_id: "54"
     label: "役員数"
-    cell: "B63"
+    cell: "AA47"
   - item_id: "55"
     label: "従業員数"
-    cell: "B64"
+    cell: "AA48"
   - item_id: "56"
     label: "役員給与"
-    cell: "B65"
+    cell: "AA49"
   - item_id: "57"
     label: "従業員給与"
-    cell: "B66"
+    cell: "AA51"
   - item_id: "58"
     label: "福利厚生費"
-    cell: "B67"
+    cell: "AA53"
   - item_id: "60"
     label: "役員賞与"
-    cell: "B69"
+    cell: "AA50"
   - item_id: "61"
     label: "従業員賞与"
-    cell: "B70"
+    cell: "AA52"
 
 pl:
   - item_id: "45"
     label: "売上高"
-    accounts: ["売上高合計", "売上高"]
+    accounts: ["売上高合計"]
   - item_id: "46"
     label: "売上原価"
-    accounts: ["売上原価合計", "売上原価"]
+    accounts: ["売上原価合計"]
   - item_id: "47"
     label: "販売費及び一般管理費"
-    accounts: ["販売費及び一般管理費合計", "販売費及び一般管理費"]
+    accounts: ["販売費及び一般管理費合計"]
   - item_id: "49"
     label: "受取利息等"
     accounts: ["受取利息"]
@@ -81,13 +81,13 @@ pl:
 bs:
   - item_id: "1"
     label: "現金・預金"
-    accounts: ["現金及び預金合計", "現金・預金", "現金及び預金"]
+    accounts: ["現金及び預金合計"]
   - item_id: "2"
     label: "受取手形・売掛金"
-    accounts: ["売上債権合計", "受取手形", "売掛金"]
+    accounts: ["売上債権合計"]
   - item_id: "13"
     label: "支払手形・買掛金"
-    accounts: ["仕入債務合計", "支払手形", "買掛金"]
+    accounts: ["仕入債務合計"]
   - item_id: "18"
     label: "社債"
     accounts: ["社債"]
@@ -104,4 +104,3 @@ bs:
     label: "利益剰余金"
     accounts: ["繰越利益剰余金", "利益剰余金"]
     optional: true
-

@@ -6,5 +6,4 @@ from .pl_csv_loader import StatementAmount, _load_statement_amounts
 
 
 def load_bs_amounts(path: str | Path, months: list[int]) -> list[StatementAmount]:
-    return _load_statement_amounts(path, months)
-
+    return _load_statement_amounts(path, months, aggregation="last")

@@ -24,11 +24,14 @@ def load_payroll_records(paths: list[str | Path]) -> list[PayrollRecord]:
             if not name and not employee_id:
                 continue
             role = first_present(row, ("役職区分", "雇用区分", "区分", "role"))
-            values = {
-                key: to_number(value)
-                for key, value in row.items()
-                if key not in {"氏名", "従業員名", "employee_name", "name", "社員番号", "従業員番号", "employee_id", "id", "役職区分", "雇用区分", "区分", "role"}
-            }
+            values: dict[str, float] = {}
+            for key, value in row.items():
+                if key in {"氏名", "従業員名", "employee_name", "name", "社員番号", "従業員番号", "employee_id", "id", "役職区分", "雇用区分", "区分", "role"}:
+                    continue
+                try:
+                    values[key] = to_number(value)
+                except ValueError:
+                    continue
             records.append(
                 PayrollRecord(
                     employee_id=employee_id,
@@ -39,4 +42,3 @@ def load_payroll_records(paths: list[str | Path]) -> list[PayrollRecord]:
                 )
             )
     return records
-

@@ -30,19 +30,20 @@ MONTH_COLUMNS = {
 
 
 def load_pl_amounts(path: str | Path, months: list[int]) -> list[StatementAmount]:
-    return _load_statement_amounts(path, months)
+    return _load_statement_amounts(path, months, aggregation="sum")
 
 
-def _load_statement_amounts(path: str | Path, months: list[int]) -> list[StatementAmount]:
+def _load_statement_amounts(path: str | Path, months: list[int], aggregation: str = "sum") -> list[StatementAmount]:
     rows = read_csv_rows(path)
     amounts: list[StatementAmount] = []
     for row in rows:
-        account = first_present(row, ("勘定科目", "科目", "account", "account_name", "name"))
+        account = first_present(row, ("", "勘定科目", "科目", "account", "account_name", "name"))
         if not account:
             continue
         total = 0.0
         used_columns: list[str] = []
-        for month in months:
+        target_months = [months[-1]] if aggregation == "last" else months
+        for month in target_months:
             for column in MONTH_COLUMNS[month]:
                 if column.lower() in row:
                     total += to_number(row[column.lower()])
@@ -52,4 +53,3 @@ def _load_statement_amounts(path: str | Path, months: list[int]) -> list[Stateme
             total = to_number(first_present(row, ("合計", "total", "金額", "amount")))
         amounts.append(StatementAmount(account=account, amount=total, source=f"{Path(path).name}:{account}"))
     return amounts
-
