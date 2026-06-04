@@ -2,7 +2,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
-from corp_stat_autofiller.cli import main
+from corp_stat_autofiller.cli import _month_in_filename, main, payroll_csv_months_for_basis, resolve_payroll_csv_paths
 
 
 def test_end_to_end_dry_run_writes_plan(tmp_path: Path):
@@ -106,3 +106,26 @@ def test_end_to_end_writes_workbook_into_timestamped_dir(tmp_path: Path):
 
 def latest_run_output(output: Path) -> Path:
     return max((path for path in output.iterdir() if path.is_dir()), key=lambda path: path.name)
+
+
+def test_auto_payroll_csv_paths_are_limited_to_quarter_months(tmp_path: Path, monkeypatch):
+    input_dir = tmp_path / "materials" / "input"
+    input_dir.mkdir(parents=True)
+    (input_dir / "payroll_2026年01月25日支給.csv").write_text("", encoding="utf-8")
+    (input_dir / "payroll_2026年03月25日支給.csv").write_text("", encoding="utf-8")
+    (input_dir / "payroll_2026年04月25日支給.csv").write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    paths = resolve_payroll_csv_paths(None, [1, 2, 3])
+    target_month_set = {1, 2, 3}
+    filtered = [path for path in paths if _month_in_filename(Path(path).name) in target_month_set]
+
+    assert [Path(path).name for path in filtered] == [
+        "payroll_2026年01月25日支給.csv",
+        "payroll_2026年03月25日支給.csv",
+    ]
+
+
+def test_worked_month_payroll_uses_next_month_payment_files():
+    assert payroll_csv_months_for_basis([1, 2, 3], "worked_month") == [2, 3, 4]
+    assert payroll_csv_months_for_basis([1, 2, 3], "paid_month") == [1, 2, 3]

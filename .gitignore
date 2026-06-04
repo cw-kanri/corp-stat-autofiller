@@ -13,3 +13,5 @@ materials/output/*
 !materials/input/template/.gitkeep
 !materials/output/.gitkeep
 dist/
+/analysis_inputs/
+/docs/feedback_followup_20260604.md

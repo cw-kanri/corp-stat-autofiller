@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -39,10 +40,18 @@ DEFAULT_RUN_CONFIG = {
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    months = quarter_to_months(args.quarter)
+    payroll_months = payroll_csv_months_for_basis(months, args.payroll_basis)
+    payroll_csv_was_explicit = args.payroll_csv is not None
     args.survey_template = resolve_survey_template_path(args.survey_template)
     args.pl_csv = resolve_single_csv_path(args.pl_csv, ("損益計算書", "pl"))
     args.bs_csv = resolve_single_csv_path(args.bs_csv, ("貸借対照表", "bs"))
-    args.payroll_csv = resolve_payroll_csv_paths(args.payroll_csv)
+    args.payroll_csv = resolve_payroll_csv_paths(args.payroll_csv, payroll_months)
+    if not payroll_csv_was_explicit:
+        target_month_set = set(payroll_months)
+        args.payroll_csv = [
+            path for path in args.payroll_csv if _month_in_filename(Path(path).name) in target_month_set
+        ]
     args.pdf = resolve_pdf_paths(args.pdf)
     output_dir = create_run_output_dir(args.output_dir)
     events = [
@@ -55,8 +64,6 @@ def main(argv: list[str] | None = None) -> int:
 
     mapping = load_yaml(args.mapping)
     rules = load_yaml(args.rules)
-    months = quarter_to_months(args.quarter)
-
     input_values: list[InputValue] = []
     unresolved: list[UnresolvedItem] = []
 
@@ -142,7 +149,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def resolve_payroll_csv_paths(paths: list[str] | None) -> list[str]:
+def resolve_payroll_csv_paths(paths: list[str] | None, target_months: list[int] | None = None) -> list[str]:
     if paths is not None:
         return paths
     return [
@@ -150,6 +157,20 @@ def resolve_payroll_csv_paths(paths: list[str] | None) -> list[str]:
         for path in sorted(Path().glob(DEFAULT_RUN_CONFIG["input_csv_pattern"]))
         if any(keyword in path.name.lower() for keyword in ("支給控除", "payroll"))
     ]
+
+
+def payroll_csv_months_for_basis(months: list[int], payroll_basis: str | None) -> list[int]:
+    if payroll_basis != "worked_month":
+        return months
+    return [month % 12 + 1 for month in months]
+
+
+def _month_in_filename(name: str) -> int | None:
+    match = re.search(r"\d{4}\D+(\d{1,2})\D+", name)
+    if not match:
+        return None
+    month = int(match.group(1))
+    return month if 1 <= month <= 12 else None
 
 
 def resolve_survey_template_path(path: str | None) -> str | None:

@@ -22,35 +22,28 @@ non_negative_items:
   - "61"
 
 balance_checks:
-  - label: "営業利益"
+  - label: "operating_profit"
     left: "[48]"
     right: "[45] - [46] - [47]"
     tolerance: 0
-  - label: "経常利益"
+  - label: "ordinary_profit"
     left: "[53]"
     right: "[48] + [49] + [50] - [51] - [52]"
     tolerance: 0
 
+computed_items:
+  "48": "[45] - [46] - [47]"
+  "53": "[48] + [49] + [50] - [51] - [52]"
+
+formula_default_zero_items:
+  - "50"
+  - "52"
+
 payroll:
   months_in_quarter: 3
   fields:
-    officer_salary:
-      - "役員報酬"
-    employee_salary:
-      - "基本給"
-      - "職能給"
-      - "生涯設計手当"
-      - "労保対象合計"
-    welfare_expense:
-      - "健康保険料(会社)"
-      - "介護保険料(会社)"
-      - "厚生年金保険料(会社)"
-      - "子ども・子育て拠出金(会社)"
-      - "雇用保険料(会社)"
-      - "労災保険料(会社)"
-      - "一般拠出金(会社)"
-    officer_bonus:
-      - "役員賞与"
-    employee_bonus:
-      - "賞与"
-
+    officer_salary: []
+    employee_salary: []
+    welfare_expense: []
+    officer_bonus: []
+    employee_bonus: []
