@@ -21,7 +21,7 @@ from corp_stat_autofiller.writers.workbook_writer import write_workbook
 
 DEFAULT_RUN_CONFIG = {
     "survey_template": None,
-    "survey_template_patterns": ["materials/input/template/*.xlsx", "materials/input/*.xlsx"],
+    "survey_template_patterns": ["materials/input/template/*.xlsx"],
     "pl_csv": None,
     "bs_csv": None,
     "input_csv_pattern": "materials/input/*.csv",

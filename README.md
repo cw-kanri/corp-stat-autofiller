@@ -15,7 +15,7 @@ uv run app.py
 ```python
 DEFAULT_RUN_CONFIG = {
     "survey_template": None,
-    "survey_template_patterns": ["materials/input/template/*.xlsx", "materials/input/*.xlsx"],
+    "survey_template_patterns": ["materials/input/template/*.xlsx"],
     "pl_csv": None,
     "bs_csv": None,
     "input_csv_pattern": "materials/input/*.csv",
@@ -27,7 +27,7 @@ DEFAULT_RUN_CONFIG = {
 }
 ```
 
-初期値は `dry_run: False` なので、毎回Excelも出力します。テンプレートは `materials/input/*.xlsx` から自動検出します。複数の `.xlsx` がある場合は一意に決められないため、`DEFAULT_RUN_CONFIG["survey_template"]` に対象ファイルを明示してください。
+初期値は `dry_run: False` なので、毎回Excelも出力します。テンプレートは `materials/input/template/*.xlsx` から自動検出します。`materials/input/` 直下の `.xlsx` はテンプレート候補として見ません。テンプレートを差し替える場合は `materials/input/template/` に1つだけ置くか、`DEFAULT_RUN_CONFIG["survey_template"]` に対象ファイルを明示してください。
 
 以前 dry-run を初期値にしていた理由は、テンプレートを壊す危険ではありません。このツールはテンプレートをコピーして出力先に書くため、元ファイルは上書きしません。注意点は、未解決項目や検証エラーが残っていてもExcelが出ると「完成版」に見えやすいことです。そのため、出力Excelは必ず `validation_report.md` と `unresolved_items.csv` とセットで確認してください。
 
@@ -39,14 +39,13 @@ DEFAULT_RUN_CONFIG = {
 
 ## 実データの置き場所
 
-`materials/input/` 配下に置きます。配布zipには空の `materials/input/`、`materials/input/template/`、`materials/output/` が入っています。中に置いた個人情報、会計データ、調査票、実行結果はgit追跡しない運用です。
+`materials/input/` 配下に置きます。配布zipには `materials/input/`、テンプレート同梱済みの `materials/input/template/`、`materials/output/` が入っています。中に置いた個人情報、会計データ、実行結果はgit追跡しない運用です。
 
 ```text
 materials/
   input/
     template/
       法人企業統計調査_template.xlsx
-    survey.xlsx
     損益計算書_月次推移_20260528_1342.csv
     貸借対照表_月次推移_20260528_1342.csv
     支給控除一覧表_2026年01月25日支給.csv
@@ -55,7 +54,7 @@ materials/
   output/
 ```
 
-調査票テンプレートは `materials/input/template/*.xlsx` を優先して自動検出します。Excelが開いている時にできる `~$...xlsx` の一時ファイルは無視します。PDFは `materials/input/*.pdf` を自動で拾い、本文抽出結果を `materials/output/<実行時刻>/pdf_texts.json` に出します。給与CSVがない場合は、人件費集計をスキップします。
+調査票テンプレートは `materials/input/template/*.xlsx` だけを自動検出します。Excelが開いている時にできる `~$...xlsx` の一時ファイルは無視します。PDFは `materials/input/*.pdf` を自動で拾い、本文抽出結果を `materials/output/<実行時刻>/pdf_texts.json` に出します。給与CSVがない場合は、人件費集計をスキップします。
 
 ## sample_output について
 

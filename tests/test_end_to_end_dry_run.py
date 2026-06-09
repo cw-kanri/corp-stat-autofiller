@@ -2,7 +2,13 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
-from corp_stat_autofiller.cli import _month_in_filename, main, payroll_csv_months_for_basis, resolve_payroll_csv_paths
+from corp_stat_autofiller.cli import (
+    _month_in_filename,
+    main,
+    payroll_csv_months_for_basis,
+    resolve_payroll_csv_paths,
+    resolve_survey_template_path,
+)
 
 
 def test_end_to_end_dry_run_writes_plan(tmp_path: Path):
@@ -129,3 +135,16 @@ def test_auto_payroll_csv_paths_are_limited_to_quarter_months(tmp_path: Path, mo
 def test_worked_month_payroll_uses_next_month_payment_files():
     assert payroll_csv_months_for_basis([1, 2, 3], "worked_month") == [2, 3, 4]
     assert payroll_csv_months_for_basis([1, 2, 3], "paid_month") == [1, 2, 3]
+
+
+def test_survey_template_auto_detection_ignores_input_root_xlsx(tmp_path: Path, monkeypatch):
+    input_dir = tmp_path / "materials" / "input"
+    template_dir = input_dir / "template"
+    template_dir.mkdir(parents=True)
+    root_xlsx = input_dir / "法人企業統計調査_downloaded.xlsx"
+    template_xlsx = template_dir / "法人企業統計調査_template.xlsx"
+    root_xlsx.write_bytes(b"root")
+    template_xlsx.write_bytes(b"template")
+    monkeypatch.chdir(tmp_path)
+
+    assert Path(resolve_survey_template_path(None)) == Path("materials/input/template/法人企業統計調査_template.xlsx")

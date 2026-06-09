@@ -84,6 +84,8 @@ uv run --extra dev pytest
 - `materials/input/` に `貸借対照表` を含むCSVがあるか。
 - 給与CSVは `支給控除` を含むファイル名か。
 
+テンプレートを自動検出する場合、候補にするのは `materials/input/template/*.xlsx` だけです。`materials/input/` 直下の `.xlsx` はCSV/PDF置き場との混同を避けるため、テンプレート候補にはしません。
+
 複数候補がある場合:
 
 - `DEFAULT_RUN_CONFIG["survey_template"]`

@@ -50,16 +50,17 @@ uv --version
 
 ## 4. 入力ファイルを置く
 
-zipには、以下の空フォルダが最初から入っています。
+zipには、以下のフォルダとテンプレートExcelが最初から入っています。
 
 ```text
 materials/
   input/
     template/
+      法人企業統計調査_template.xlsx
   output/
 ```
 
-その中に、必要なファイルを置きます。
+`materials/input/` に、CSVやPDFなどの入力ファイルを置きます。
 
 ```text
 materials/
@@ -80,7 +81,7 @@ materials/
 - 損益計算書CSV: `損益計算書` を含む
 - 貸借対照表CSV: `貸借対照表` を含む
 - 給与CSV: `支給控除` を含む
-- テンプレートExcel: `materials/input/template/` に置く
+- テンプレートExcel: zipに同梱済み。追加・差し替えする場合も `materials/input/template/` に1つだけ置く
 - PDF: `materials/input/` に置く
 
 ## 5. 実行する
@@ -146,7 +147,7 @@ uv : 用語 'uv' は認識されません
 
 ### 候補ファイルが複数あると言われる
 
-同じ種類のCSVやテンプレートが複数ある場合、自動で選べないことがあります。
+同じ種類のCSVやテンプレートが複数ある場合、自動で選べないことがあります。テンプレートExcelは `materials/input/template/` に1つだけ置き、`materials/input/` 直下には置かないでください。
 
 対処:
 

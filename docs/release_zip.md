@@ -1,6 +1,6 @@
 # zip配布手順
 
-このドキュメントは、社員に試用してもらうための配布zipを作る手順です。空の `materials/` フォルダ構成はzipに入れますが、個人情報、会計データ、調査票テンプレート、出力結果、仮想環境はzipに入れません。
+このドキュメントは、社員に試用してもらうための配布zipを作る手順です。空の `materials/` フォルダ構成と調査票テンプレートはzipに入れますが、個人情報、会計データ、出力結果、仮想環境はzipに入れません。
 
 ## zipに入れるもの
 
@@ -15,7 +15,7 @@
 - `src/`
 - `docs/`
 - 空の `materials/input/`
-- 空の `materials/input/template/`
+- `materials/input/template/法人企業統計調査_template.xlsx`
 - 空の `materials/output/`
 
 任意:
@@ -33,7 +33,6 @@
 - `.pytest_cache/`
 - `__pycache__/`
 - `materials/input/` 内の実ファイル
-- `materials/input/template/` 内の実テンプレート
 - `materials/output/` 内の実行結果
 - `input/`
 - `output/`
@@ -43,7 +42,7 @@
 - `*.pyc`
 - `*.pyo`
 
-`materials/` のフォルダ自体は、社員が置き場所に迷わないようzipに入れます。ただし中身の実ファイルは個人情報や会計情報を含む可能性が高いので、配布zipには入れません。
+`materials/` のフォルダ自体は、社員が置き場所に迷わないようzipに入れます。調査票テンプレートは `materials/input/template/` に同梱します。ただしCSV、PDF、出力結果など、個人情報や会計情報を含む可能性が高いファイルは配布zipには入れません。
 
 ## 配布前チェック
 
@@ -81,10 +80,11 @@ uv run app.py
 リポジトリ直下で実行します。
 
 ```powershell
-$version = "v1.0.0"
+$version = "v1.0.1"
 $releaseName = "corp-stat-autofiller-$version"
 $staging = "dist\$releaseName"
 $zipPath = "dist\$releaseName.zip"
+$templateSource = "materials\input\template\法人企業統計調査_template.xlsx"
 
 Remove-Item -Recurse -Force "dist" -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $staging | Out-Null
@@ -103,6 +103,7 @@ Copy-Item -Recurse "docs" $staging
 
 New-Item -ItemType Directory -Force "$staging\materials\input\template" | Out-Null
 New-Item -ItemType Directory -Force "$staging\materials\output" | Out-Null
+Copy-Item $templateSource "$staging\materials\input\template\"
 
 Get-ChildItem $staging -Recurse -Force |
     Where-Object {
@@ -114,20 +115,26 @@ Get-ChildItem $staging -Recurse -Force |
 Compress-Archive -Path $staging -DestinationPath $zipPath -Force
 ```
 
-`$version` を変えると、作成されるzip名も変わります。たとえば `$version = "v1.0.0"` の場合は `dist/corp-stat-autofiller-v1.0.0.zip` になります。
+`$version` を変えると、作成されるzip名とzip内のトップフォルダ名が同時に変わります。たとえば `$version = "v1.0.1"` の場合は `dist/corp-stat-autofiller-v1.0.1.zip` になり、zip内のトップフォルダも `corp-stat-autofiller-v1.0.1` になります。
 
 ## 作成後チェック
 
 zipの中にキャッシュや `.gitkeep` が入っていないか確認します。
 
 ```powershell
-$version = "v1.0.0"
+$version = "v1.0.1"
 $releaseName = "corp-stat-autofiller-$version"
 $zipPath = "dist\$releaseName.zip"
 $checkDir = "dist\_zip_check"
 
 Remove-Item -Recurse -Force $checkDir -ErrorAction SilentlyContinue
 Expand-Archive -Path $zipPath -DestinationPath $checkDir -Force
+
+$topDirs = Get-ChildItem $checkDir -Directory
+if ($topDirs.Count -ne 1 -or $topDirs[0].Name -ne $releaseName) {
+    $topDirs | Select-Object Name, FullName
+    throw "zip内のトップフォルダ名がバージョン名と一致していません。"
+}
 
 $unexpected = Get-ChildItem $checkDir -Recurse -Force |
     Where-Object {
@@ -153,19 +160,25 @@ foreach ($dir in $requiredDirs) {
     }
 }
 
+$requiredTemplate = "$checkDir\$releaseName\materials\input\template\法人企業統計調査_template.xlsx"
+if (-not (Test-Path $requiredTemplate -PathType Leaf)) {
+    throw "調査票テンプレートがzipに入っていません: $requiredTemplate"
+}
+
 Remove-Item -Recurse -Force $checkDir
 ```
 
-## 配布zipに含まれる空フォルダ
+## 配布zipに含まれるフォルダとテンプレート
 
 ```text
 materials/
   input/
     template/
+      法人企業統計調査_template.xlsx
   output/
 ```
 
-社員側でフォルダを作る必要はありません。`materials/input/template/` に統計調査テンプレート `.xlsx` を置きます。CSVとPDFは `materials/input/` に置きます。
+社員側でフォルダを作る必要はありません。統計調査テンプレート `.xlsx` はzipに同梱済みです。CSVとPDFは `materials/input/` に置きます。
 
 ## 配布時に添える説明
 
@@ -173,7 +186,7 @@ materials/
 
 - 実行コマンドは `uv run app.py`
 - 入力ファイルは `materials/input/` に置く
-- テンプレートExcelは `materials/input/template/` に置く
+- テンプレートExcelは `materials/input/template/` に同梱済み
 - 出力は `materials/output/<実行時刻>/` に作られる
 - 出力Excelだけでなく、`validation_report.md` と `unresolved_items.csv` も確認する
 
