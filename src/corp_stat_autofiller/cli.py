@@ -41,11 +41,12 @@ DEFAULT_RUN_CONFIG = {
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     months = quarter_to_months(args.quarter)
+    statement_months = previous_quarter_months(months) + months
     payroll_months = payroll_csv_months_for_basis(months, args.payroll_basis)
     payroll_csv_was_explicit = args.payroll_csv is not None
     args.survey_template = resolve_survey_template_path(args.survey_template)
-    args.pl_csv = resolve_single_csv_path(args.pl_csv, ("損益計算書", "pl"))
-    args.bs_csv = resolve_single_csv_path(args.bs_csv, ("貸借対照表", "bs"))
+    args.pl_csv = resolve_statement_csv_paths(args.pl_csv, ("損益計算書", "pl"), statement_months)
+    args.bs_csv = resolve_statement_csv_paths(args.bs_csv, ("貸借対照表", "bs"), statement_months)
     args.payroll_csv = resolve_payroll_csv_paths(args.payroll_csv, payroll_months)
     if not payroll_csv_was_explicit:
         target_month_set = set(payroll_months)
@@ -68,18 +69,44 @@ def main(argv: list[str] | None = None) -> int:
     unresolved: list[UnresolvedItem] = []
 
     if args.pl_csv:
-        pl_amounts = load_pl_amounts(require_existing_file(args.pl_csv, "PL CSV"), months)
+        pl_amounts = [
+            amount
+            for path in args.pl_csv
+            for amount in load_pl_amounts(
+                require_existing_file(path, "PL CSV"),
+                statement_months_for_file(path, statement_months),
+            )
+        ]
         values, issues = resolve_statement_values(pl_amounts, mapping, "pl")
         input_values.extend(values)
         unresolved.extend(issues)
-        events.append(AuditEvent("load_pl", "PL CSVを読み込みました。", {"rows": len(pl_amounts), "months": months}))
+        events.append(
+            AuditEvent(
+                "load_pl",
+                "PL CSVを読み込みました。",
+                {"rows": len(pl_amounts), "months": statement_months, "files": args.pl_csv},
+            )
+        )
 
     if args.bs_csv:
-        bs_amounts = load_bs_amounts(require_existing_file(args.bs_csv, "BS CSV"), months)
+        bs_amounts = [
+            amount
+            for path in args.bs_csv
+            for amount in load_bs_amounts(
+                require_existing_file(path, "BS CSV"),
+                statement_months_for_file(path, statement_months),
+            )
+        ]
         values, issues = resolve_statement_values(bs_amounts, mapping, "bs")
         input_values.extend(values)
         unresolved.extend(issues)
-        events.append(AuditEvent("load_bs", "BS CSVを読み込みました。", {"rows": len(bs_amounts), "months": months}))
+        events.append(
+            AuditEvent(
+                "load_bs",
+                "BS CSVを読み込みました。",
+                {"rows": len(bs_amounts), "months": statement_months, "files": args.bs_csv},
+            )
+        )
 
     if args.payroll_csv:
         records = load_payroll_records(args.payroll_csv)
@@ -165,6 +192,10 @@ def payroll_csv_months_for_basis(months: list[int], payroll_basis: str | None) -
     return [month % 12 + 1 for month in months]
 
 
+def previous_quarter_months(months: list[int]) -> list[int]:
+    return [month - 3 if month > 3 else month + 9 for month in months]
+
+
 def _month_in_filename(name: str) -> int | None:
     match = re.search(r"\d{4}\D+(\d{1,2})\D+", name)
     if not match:
@@ -201,22 +232,57 @@ def find_candidate_files(patterns: list[str]) -> list[Path]:
     return sorted(path for path in candidates if not path.name.startswith("~$"))
 
 
-def resolve_single_csv_path(path: str | None, keywords: tuple[str, ...]) -> str | None:
+def resolve_statement_csv_paths(path: str | None, keywords: tuple[str, ...], report_months: list[int]) -> list[str]:
     if path:
-        return path
+        return [path]
     candidates = [
         candidate
         for candidate in sorted(Path().glob(DEFAULT_RUN_CONFIG["input_csv_pattern"]))
         if any(keyword.lower() in candidate.name.lower() for keyword in keywords)
     ]
     if not candidates:
-        return None
-    if len(candidates) > 1:
-        names = ", ".join(str(candidate) for candidate in candidates)
-        raise FileNotFoundError(
-            f"候補CSVが複数あり、一意に決められません。DEFAULT_RUN_CONFIG または引数で明示してください: {names}"
-        )
-    return str(candidates[0])
+        return []
+    grouped: dict[tuple[int, ...], list[Path]] = {}
+    for candidate in candidates:
+        grouped.setdefault(statement_months_for_file(candidate, report_months), []).append(candidate)
+    return [str(select_latest_candidate(group)) for group in grouped.values()]
+
+
+def statement_months_for_file(path: str | Path, report_months: list[int]) -> tuple[int, ...]:
+    present_months = detect_month_columns(path)
+    matched = tuple(month for month in report_months if month in present_months)
+    return matched or tuple(report_months)
+
+
+def detect_month_columns(path: str | Path) -> set[int]:
+    from corp_stat_autofiller.loaders.csv_utils import read_csv_rows
+    from corp_stat_autofiller.loaders.pl_csv_loader import MONTH_COLUMNS
+
+    try:
+        rows = read_csv_rows(path)
+    except (OSError, ValueError):
+        return set()
+    keys = set(rows[0]) if rows else set()
+    return {
+        month
+        for month, columns in MONTH_COLUMNS.items()
+        if any(column.lower() in keys for column in columns)
+    }
+
+
+def select_latest_candidate(candidates: list[Path]) -> Path:
+    return max(candidates, key=candidate_recency_key)
+
+
+def candidate_recency_key(path: Path) -> tuple[int, int, str]:
+    match = re.search(r"(20\d{2})(\d{2})(\d{2})(?:[_-]?(\d{4}))?", path.stem)
+    if match:
+        year, month, day, time = match.groups()
+        return (2, int(f"{year}{month}{day}{time or '0000'}"), path.name)
+    try:
+        return (1, int(path.stat().st_mtime), path.name)
+    except OSError:
+        return (0, 0, path.name)
 
 
 def resolve_pdf_paths(paths: list[str] | None) -> list[str]:

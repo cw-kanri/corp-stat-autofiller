@@ -54,7 +54,7 @@ uv run --extra dev pytest
 
 重点テスト:
 
-- `tests/test_statement_loaders.py`: PL/BS CSV読み込み、PLは3か月合計、BSは四半期末残高。
+- `tests/test_statement_loaders.py`: PL/BS CSV読み込み、PLは指定月合計、BSは指定月の末月残高。
 - `tests/test_workbook_writer.py`: 結合セルに当たった場合の左上セル解決。
 - `tests/test_end_to_end_dry_run.py`: end-to-end出力。
 - `tests/test_mapping_resolver.py`: マッピングとunresolved。
@@ -86,13 +86,15 @@ uv run --extra dev pytest
 
 テンプレートを自動検出する場合、候補にするのは `materials/input/template/*.xlsx` だけです。`materials/input/` 直下の `.xlsx` はCSV/PDF置き場との混同を避けるため、テンプレート候補にはしません。
 
-複数候補がある場合:
+PL/BS CSVが複数ある場合は、CSV内の月列で期間を判別します。該当3か月とその前の3か月のように月列が違うファイルは両方読み込み、同じ月列の候補が複数ある場合だけ、ファイル名の日付・時刻を見て最新候補を使います。給与CSVは対象月のファイルを複数読み込みます。
+
+明示パスを使う場合:
 
 - `DEFAULT_RUN_CONFIG["survey_template"]`
 - `DEFAULT_RUN_CONFIG["pl_csv"]`
 - `DEFAULT_RUN_CONFIG["bs_csv"]`
 
-に明示パスを入れます。
+に対象ファイルのパスを入れます。
 
 ### Excel書き込みで `MergedCell` エラー
 

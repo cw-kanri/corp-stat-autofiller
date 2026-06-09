@@ -37,6 +37,8 @@ DEFAULT_RUN_CONFIG = {
 - BS: `貸借対照表` または `bs` を含むCSV
 - 給与: `支給控除` または `payroll` を含むCSV
 
+PL/BS CSVが複数ある場合は、CSV内の月列で期間を判別します。該当3か月とその前の3か月のように月列が違うファイルは両方読み込み、同じ月列のファイルが複数ある場合だけ、ファイル名に含まれる `YYYYMMDD_HHMM` 形式などの日付・時刻を見て最新の候補を使います。給与CSVは対象月のファイルを複数読み込みます。
+
 ## 実データの置き場所
 
 `materials/input/` 配下に置きます。配布zipには `materials/input/`、テンプレート同梱済みの `materials/input/template/`、`materials/output/` が入っています。中に置いた個人情報、会計データ、実行結果はgit追跡しない運用です。
