@@ -10,6 +10,7 @@ from corp_stat_autofiller.cli import (
     resolve_payroll_csv_paths,
     resolve_statement_csv_paths,
     resolve_survey_template_path,
+    statement_report_months,
     statement_months_for_file,
 )
 
@@ -187,6 +188,27 @@ def test_statement_csv_auto_detection_keeps_distinct_month_sets(tmp_path: Path, 
     assert statement_months_for_file(paths[1], [10, 11, 12, 1, 2, 3]) == (1, 2, 3)
 
 
+def test_statement_csv_auto_detection_skips_non_matching_month_sets(tmp_path: Path, monkeypatch):
+    input_dir = tmp_path / "materials" / "input"
+    input_dir.mkdir(parents=True)
+    previous = input_dir / "損益計算書_月次推移_20260604_1144.csv"
+    current = input_dir / "損益計算書_月次推移_20260528_1342.csv"
+    previous.write_text("勘定科目,10月,11月,12月\n売上高合計,1,2,3\n", encoding="utf-8")
+    current.write_text("勘定科目,1月,2月,3月\n売上高合計,4,5,6\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    paths = resolve_statement_csv_paths(None, ("損益計算書", "pl"), [1, 2, 3])
+
+    assert [Path(path) for path in paths] == [Path("materials/input/損益計算書_月次推移_20260528_1342.csv")]
+
+
 def test_previous_quarter_months_wraps_year_boundary():
     assert previous_quarter_months([1, 2, 3]) == [10, 11, 12]
     assert previous_quarter_months([7, 8, 9]) == [4, 5, 6]
+
+
+def test_statement_report_months_use_current_pl_and_opening_bs_periods():
+    pl_months, bs_months = statement_report_months([1, 2, 3])
+
+    assert pl_months == [1, 2, 3]
+    assert bs_months == [10, 11, 12]

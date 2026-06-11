@@ -80,7 +80,7 @@ uv run app.py
 リポジトリ直下で実行します。
 
 ```powershell
-$version = "v1.0.1"
+$version = "v1.0.2"
 $releaseName = "corp-stat-autofiller-$version"
 $staging = "dist\$releaseName"
 $zipPath = "dist\$releaseName.zip"

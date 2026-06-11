@@ -94,7 +94,7 @@ bs:
     optional: true
   - item_id: "19"
     label: "長期借入金"
-    accounts: ["長期借入金"]
+    accounts: ["長期借入金", "資本性劣後ローン"]
     optional: true
   - item_id: "24"
     label: "資本金"
